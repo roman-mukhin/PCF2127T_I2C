@@ -1,42 +1,53 @@
 #include "PCF2127T_I2C.h"
 
-PCF2127T_I2C::PCF2127T_I2C(void) {
-  Wire.begin();
+PCF2127T_I2C::PCF2127T_I2C() {
+  _i2c = NULL;
 }
 
-// PUBLIC
-void PCF2127T_I2C::setTime(uint8_t year, uint8_t month, uint8_t day, uint8_t hour, uint8_t minute, uint8_t second, uint8_t weekday) {
-  Wire.beginTransmission(I2C_ADDR);
-  Wire.write(RTC_SECOND_ADDR);
-  Wire.write(decToBcd(second));
-  Wire.write(decToBcd(minute));
-  Wire.write(decToBcd(hour));
-  Wire.endTransmission();
 
-  Wire.beginTransmission(I2C_ADDR);
-  Wire.write(RTC_DAY_ADDR);
-  Wire.write(decToBcd(day));
-  Wire.write(decToBcd(weekday));
-  Wire.write(decToBcd(month));
-  Wire.write(decToBcd(year));  // 2000 - 00, ..., 2099 - 99
-  Wire.endTransmission();
+// PUBLIC
+void PCF2127T_I2C::begin(TwoWire* wire) {
+  // setup I2C bus
+  if (wire) {
+    _i2c = wire;
+  } else {
+    _i2c = &Wire;
+  }
+  _i2c->begin();
+}
+
+void PCF2127T_I2C::setTime(uint8_t year, uint8_t month, uint8_t day, uint8_t hour, uint8_t minute, uint8_t second, uint8_t weekday) {
+  _i2c->beginTransmission(I2C_ADDR);
+  _i2c->write(RTC_SECOND_ADDR);
+  _i2c->write(decToBcd(second));
+  _i2c->write(decToBcd(minute));
+  _i2c->write(decToBcd(hour));
+  _i2c->endTransmission();
+
+  _i2c->beginTransmission(I2C_ADDR);
+  _i2c->write(RTC_DAY_ADDR);
+  _i2c->write(decToBcd(day));
+  _i2c->write(decToBcd(weekday));
+  _i2c->write(decToBcd(month));
+  _i2c->write(decToBcd(year));  // 2000 - 00, ..., 2099 - 99
+  _i2c->endTransmission();
 }
 
 void PCF2127T_I2C::readTime(uint8_t& year, uint8_t& month, uint8_t& day, uint8_t& hour, uint8_t& minute, uint8_t& second, uint8_t& weekday) {
-  Wire.beginTransmission(I2C_ADDR);
-  Wire.write(RTC_SECOND_ADDR);
-  Wire.endTransmission();
+  _i2c->beginTransmission(I2C_ADDR);
+  _i2c->write(RTC_SECOND_ADDR);
+  _i2c->endTransmission();
 
-  Wire.requestFrom(I2C_ADDR, 7);
+  _i2c->requestFrom(I2C_ADDR, 7);
 
-  while (Wire.available()) {
-    second = bcdToDec(Wire.read() & 0x7F);
-    minute = bcdToDec(Wire.read() & 0x7F);
-    hour = bcdToDec(Wire.read() & 0x3F);
-    day = bcdToDec(Wire.read() & 0x3F);
-    weekday = bcdToDec(Wire.read() & 0x07);
-    month = bcdToDec(Wire.read() & 0x1F);
-    year = bcdToDec(Wire.read());
+  while (_i2c->available()) {
+    second = bcdToDec(_i2c->read() & 0x7F);
+    minute = bcdToDec(_i2c->read() & 0x7F);
+    hour = bcdToDec(_i2c->read() & 0x3F);
+    day = bcdToDec(_i2c->read() & 0x3F);
+    weekday = bcdToDec(_i2c->read() & 0x07);
+    month = bcdToDec(_i2c->read() & 0x1F);
+    year = bcdToDec(_i2c->read());
   }
 }
 

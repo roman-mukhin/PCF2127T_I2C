@@ -26,7 +26,7 @@ void rtcGetTime() {
 void setup() {
   Serial.begin(115200);
   Serial.println(F("PCF2127T(I2C) test"));
-  Wire.begin();
+  rtc.begin(&Wire1);
 
   rtcSetTime(24, 2, 28, 23, 59, 30, 3); // 28 Feb 2024, 23:59:30, Th
   previous_millis = millis();
